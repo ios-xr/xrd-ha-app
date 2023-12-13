@@ -1,0 +1,136 @@
+---
+global:
+  image:
+    # Array of container image registry key names to be specified on all Pods.
+    # Refer to https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod.
+    # Each element in this array must be a YAML map representing a Kubernetes
+    # [`LocalObjectReference`](https://kubernetes.io/docs/reference/kubernetes-api/common-definitions/local-object-reference/#LocalObjectReference).
+    #
+    # Example:
+    #
+    # ```yaml
+    # pullSecrets:
+    # - name: myregistrykey
+    # ```
+    pullSecrets: null
+
+  # Extra labels to apply to all resources.
+  #labels: null
+
+# HA application configuration.
+haApp:
+  # The prefix used for all resource names.  If not set, the prefix is the
+  # chart name.
+  name: null
+
+  image:
+    # HA container image repository.  This must be set to a non-null value.
+    repository: null
+
+    # HA container image tag.
+    tag: "latest"
+
+    # The pull policy of the HA container.
+    # Refer to https://kubernetes.io/docs/concepts/containers/images/#updating-images.
+    pullPolicy: "Always"
+
+    # Array of container image registry key names to be specified on the HA
+    # application Pod.  This array is concatenated with
+    # `global.image.pullSecrets`.
+    # Refer to the documentation for `global.image.pullSecrets`.
+    pullSecrets: null
+
+  # Resource management for the HA container.
+  # Refer to https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/.
+  # This must be a YAML map representing a Kubernetes
+  # [`ResourceRequirements`](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#resources).
+  resources: null
+
+  # Security context for the HA application Pod.
+  # Refer to https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod.
+  # This must be a YAML map representing a Kubernetes
+  # [`PodSecurityContext`](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#security-context).
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+
+  # Security context for containers in the HA application Pod.
+  # Refer to https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container.
+  # This must be a YAML map with each value representing a Kubernetes
+  # [`SecurityContext`](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#security-context-1)
+  containerSecurityContext:
+    # The HA container.
+    main: null
+
+  # Target node labels for the HA application Pod.
+  # Refer to https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector.
+  nodeSelector: null
+
+  # HA application Pod affinity.
+  # This must be a multi-line YAML-formatted string representing a Kubernetes
+  # Affinity, which is templated.
+  # Refer to https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity.
+  affinity: |
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/instance: "{{ .Release.Name }}"
+            app.kubernetes.io/name: "xrd"
+        topologyKey: "kubernetes.io/hostname"
+
+  # Taints and tolerations for the HA application Pod.
+  # Refer to https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/.
+  # This must be a YAML map representing a Kubernetes
+  # [`Toleration`](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#scheduling)
+  tolerations: null
+
+  # Annotations to apply to the HA application Pod.
+  annotations: null
+
+  # Extra labels to apply to all HA application resources.
+  # This is merged with `global.labels`.
+  labels: null
+
+  service:
+    # The port exposed by the HA application Service.  This should be used as
+    # the destination port in XR telemetry configuration.
+    exposedPort: 50051
+
+    # The target port in the HA container.
+    # This must match `global.port` in the HA application configuration.
+    targetPort: 50051
+
+    # The IP address of the Service.  If unset, then an IP address is assigned
+    # randomly.
+    clusterIP: null
+
+    # Annotations to apply to the HA application Service.
+    annotations: null
+
+  serviceAccount:
+    # Annotations to apply to the HA application ServiceAccount.
+    annotations: null
+
+  # HA application configuration.  This must be a multi-line YAML-formatted
+  # string, which is templated.
+  #
+  # Example:
+  #
+  # ```yaml
+  # config: |
+  #   groups:
+  #   - xr_interface: HundredGigE0/0/0/1
+  #     vrid: 1
+  #     action:
+  #       type: aws_activate_vip
+  #       device_index: 1
+  #       vip: 10.0.2.100
+  # ```
+  config: |
+    groups: []
+
+# `xrd-vrouter` subchart configuration.
+xrd:
+  # If true, an XRd vRouter instance is deployed alongside the HA application.
+  enabled: true

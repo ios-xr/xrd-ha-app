@@ -1,0 +1,12 @@
+[run]
+relative_files = True
+source = ha_app/
+omit = ha_app/gpb/*.py
+sigterm = True
+
+[report]
+exclude_lines =
+    if typing\.TYPE_CHECKING:
+    assert\s
+    raise NotImplementedError
+    return NotImplemented

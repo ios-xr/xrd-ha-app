@@ -1,0 +1,25 @@
+[tool.black]
+target-version = ["py311"]
+extend-exclude = "ha_app/gpb/"
+
+[tool.isort]
+# Make compatible with Black
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+# Other options
+py_version=311
+order_by_type = true
+lines_after_imports = 2
+skip_glob = ['*venv*/*', "ha_app/gpb/*"]
+sections = [
+    "FUTURE", "STDLIB", "THIRDPARTY", "GPB", "FIRSTPARTY", "LOCALFOLDER"
+]
+known_gpb = [
+    "cisco_grpc_dialout_pb2",
+    "cisco_grpc_dialout_pb2_grpc",
+    "telemetry_pb2",
+    "telemetry_pb2_grpc",
+]

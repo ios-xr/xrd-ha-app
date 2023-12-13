@@ -1,0 +1,1 @@
+Thank you for installing the example XRd HA application!  Your release is named {{ .Release.Name }}.

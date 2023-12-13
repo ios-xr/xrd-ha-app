@@ -1,0 +1,81 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "xrd-ha-app.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "xrd-ha-app.labels.standard" . | nindent 4 }}
+    {{- if .Values.global.labels }}
+    {{- toYaml .Values.global.labels | nindent 4 }}
+    {{- end }}
+    {{- if .Values.haApp.labels }}
+    {{- toYaml .Values.haApp.labels | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "xrd-ha-app.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        {{- include "xrd-ha-app.labels.standard" . | nindent 8 }}
+        {{- if .Values.global.labels }}
+        {{- toYaml .Values.global.labels | nindent 8 }}
+        {{- end }}
+        {{- if .Values.haApp.labels }}
+        {{- toYaml .Values.haApp.labels | nindent 8 }}
+        {{- end }}
+      annotations:
+        config-checksum: {{ sha256sum .Values.haApp.config }}
+        {{- if .Values.haApp.annotations }}
+        {{- toYaml .Values.haApp.annotations | nindent 8 }}
+        {{- end }}
+    spec:
+      containers:
+      - name: main
+        {{- $repository := .Values.haApp.image.repository | required "'haApp.image.repository' must be set" }}
+        image: {{ printf "\"%s:%s\"" $repository .Values.haApp.image.tag }}
+        imagePullPolicy: {{ .Values.haApp.image.pullPolicy }}
+        volumeMounts:
+        - name: config
+          mountPath: "/etc/ha_app"
+          readOnly: true
+        {{- if .Values.haApp.resources }}
+        resources:
+          {{- toYaml .Values.haApp.resources | nindent 10 }}
+        {{- end }}
+        {{- if .Values.haApp.containerSecurityContext.main }}
+        securityContext:
+          {{- toYaml .Values.haApp.containerSecurityContext.main | nindent 10 }}
+        {{- end }}
+      {{- if (or .Values.global.image.pullSecrets .Values.haApp.image.pullSecrets) }}
+      imagePullSecrets:
+        {{- concat (default list .Values.global.image.pullSecrets) (default list .Values.haApp.image.pullSecrets) | toYaml | nindent 6 }}
+      {{- end }}
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "xrd-ha-app.fullname" . }}
+          items:
+          - key: "config"
+            path: "config.yaml"
+      {{- if .Values.haApp.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.haApp.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.haApp.affinity }}
+      affinity:
+        {{ tpl .Values.haApp.affinity . | nindent 8 | trim }}
+      {{- end }}
+      {{- if .Values.haApp.tolerations }}
+      tolerations:
+        {{- toYaml .Values.haApp.tolerations | nindent 6 }}
+      {{- end }}
+      serviceAccountName: {{ include "xrd-ha-app.fullname" . }}
+      {{- if .Values.haApp.podSecurityContext }}
+      securityContext:
+        {{- toYaml .Values.haApp.podSecurityContext | nindent 8 }}
+      {{- end }}

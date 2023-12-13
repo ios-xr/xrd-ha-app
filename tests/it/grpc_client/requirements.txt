@@ -1,0 +1,4 @@
+# Direct dependencies:
+#  grpcio protobuf
+grpcio==1.54.2
+protobuf==4.23.3

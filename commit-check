@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+
+# Copyright 2023 Cisco Systems Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+
+
+if [[ ! $CONTAINER_EXE ]]; then
+    CONTAINER_EXE=docker
+fi
+
+
+#=====================================================
+# Env check
+#=====================================================
+
+if ! python3.11 --version &>/dev/null; then
+    echo "Python 3.11 not found, required for running the tests" >&2
+    exit 1
+fi
+
+if ! "$CONTAINER_EXE" version &>/dev/null; then
+    echo "Container manager $CONTAINER_EXE not set up correctly, required for running the IT tests" >&2
+    exit 1
+fi
+
+
+#=====================================================
+# Run checks
+#=====================================================
+
+function cleanup()
+{
+    echo
+    echo "Cleaning up..."
+    if [[ -d $TMP_VENV ]]; then
+        rm -r "$TMP_VENV"
+    fi
+}
+
+trap cleanup EXIT
+
+FAILURES=0
+
+echo "Setting up python venv..."
+TMP_VENV=$(mktemp -d -t venv.XXXXXX)
+python3.11 -m venv "$TMP_VENV"
+source "$TMP_VENV/bin/activate"
+pip install -U pip wheel
+pip install -r requirements-dev.txt
+
+echo
+echo "Running black check..."
+if ! black --check .; then
+    echo "Run 'black .' to fix the python formatting." >&2
+    FAILURES=$((FAILURES+1))
+fi
+
+echo
+echo "Running isort check..."
+if ! isort --check .; then
+    echo "Run 'isort .' to fix the python import order." >&2
+    FAILURES=$((FAILURES+1))
+fi
+
+echo
+echo "Running pylint..."
+if ! pylint ha_app/; then
+    echo "Pylint failed, check output and fix issues." >&2
+    FAILURES=$((FAILURES+1))
+fi
+
+echo
+echo "Running mypy..."
+if ! mypy .; then
+    echo "Mypy failed, check output and fix issues." >&2
+    FAILURES=$((FAILURES+1))
+fi
+
+echo
+echo "Running tests..."
+if ! pytest --container-exe "$CONTAINER_EXE"; then
+    echo "Tests failed, check output and fix issues." >&2
+    FAILURES=$((FAILURES+1))
+fi
+
+
+#=====================================================
+# Final steps
+#=====================================================
+
+echo
+if ((FAILURES > 0)); then
+    echo "ERROR: There were $FAILURES failures"
+    exit 1
+else
+    echo "SUCCESS: All passed!"
+    exit 0
+fi

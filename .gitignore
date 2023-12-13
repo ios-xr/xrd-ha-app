@@ -1,0 +1,13 @@
+.idea/
+*venv*/
+__pycache__/
+.mypy_cache/
+.pylint_cache/
+.pytest_cache/
+*.coverage
+htmlcov/
+*,cover
+coverage.xml
+.vscode/
+**/charts/*.tgz
+Chart.lock

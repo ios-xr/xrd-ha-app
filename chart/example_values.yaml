@@ -1,0 +1,58 @@
+---
+haApp:
+  image:
+    repository: "${xrd-ha-app_repository}"
+  service:
+    exposedPort: 50051
+    clusterIP: "172.20.171.1"
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: "${iam_role_arn}"
+  config: |
+    groups:
+      - xr_interface: HundredGigE0/0/0/0
+        vrid: 1
+        action:
+          type: aws_activate_vip
+          device_index: 1
+          vip: 10.0.10.20
+xrd:
+  image:
+    repository: "${xrd-vrouter_repository}"
+    tag: "latest"
+  config:
+    ascii: |
+      vrf ha-app
+      linux networking linux-owned-vrf ha-app
+      interface Hu0/0/0/0
+       ipv4 address 10.0.10.10/24
+      !
+      router vrrp
+       interface HundredGigE0/0/0/0
+        address-family ipv4
+         vrrp 1
+          address 10.0.10.20
+          unicast-peer 10.0.10.11
+         !
+        !
+       !
+      telemetry model-driven
+       destination-group ha-app
+        vrf ha-app
+        destination 172.20.171.1 port 50051
+         encoding self-describing-gpb
+         protocol grpc no-tls
+        !
+       !
+       sensor-group ha-app
+        sensor-path Cisco-IOS-XR-ipv4-vrrp-oper:vrrp/ipv4/virtual-routers/virtual-router
+       !
+       subscription ha-app
+        sensor-group-id ha-app sample-interval 0
+        destination-id ha-app
+       !
+      !
+  interfaces:
+  - type: pci
+    config:
+      last: 1

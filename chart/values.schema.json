@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "type": "object",
+  "properties": {
+    "global": {
+      "type": "object"
+    },
+    "haApp": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "image": {
+          "type": "object",
+          "properties": {
+            "repository": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tag": {
+              "type": "string",
+              "default": "latest"
+            },
+            "pullPolicy": {
+              "type": "string",
+              "enum": [
+                "Always",
+                "IfNotPresent",
+                "Never"
+              ],
+              "default": "IfNotPresent"
+            },
+            "pullSecrets": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "repository"
+          ],
+          "additionalProperties": false
+        },
+        "resources": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "default": null
+        },
+        "podSecurityContext": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "default": null
+        },
+        "containerSecurityContext": {
+          "type": "object",
+          "properties": {
+            "main": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "default": null
+            }
+          },
+          "additionalProperties": false
+        },
+        "nodeSelector": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "default": null
+        },
+        "affinity": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tolerations": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "default": null
+        },
+        "annotations": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "default": null
+        },
+        "labels": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "default": null
+        },
+        "service": {
+          "type": "object",
+          "properties": {
+            "exposedPort": {
+              "type": "integer",
+              "default": 50051
+            },
+            "targetPort": {
+              "type": "integer",
+              "default": 50051
+            },
+            "clusterIP": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "default": null
+            },
+            "annotations": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "default": null
+            }
+          },
+          "additionalProperties": false
+        },
+        "serviceAccount": {
+          "type": "object",
+          "properties": {
+            "annotations": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "default": null
+            }
+          },
+          "additionalProperties": false
+        },
+        "config": {
+          "type": "string"
+        },
+        "additionalProperties": false
+      },
+      "required": [
+        "image",
+        "containerSecurityContext",
+        "service",
+        "serviceAccount"
+      ]
+    },
+    "xrd": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    }
+  },
+  "required": [
+    "haApp",
+    "xrd"
+  ],
+  "additionalProperties": false
+}

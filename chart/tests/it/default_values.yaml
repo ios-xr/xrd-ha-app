@@ -1,0 +1,13 @@
+---
+haApp:
+  image:
+    repository: gitlab/gitlab-runner
+    tag: alpine
+xrd:
+  image:
+    repository: gitlab/gitlab-runner
+    tag: alpine
+  resources:
+    limits:
+      memory: "0Mi"
+      hugepages-1Gi: "0Gi"
