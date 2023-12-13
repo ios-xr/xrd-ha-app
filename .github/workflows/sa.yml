@@ -1,0 +1,46 @@
+name: static-analysis
+on:
+  pull_request:
+    branches:
+      - 'main'
+    paths-ignore:
+      - '.gitignore'
+      - '*.md'
+      - 'docs/**'
+      - 'commit-check'
+  push:
+    branches:
+      - 'gh-actions'
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        name: ['black', 'isort', 'pylint', 'mypy']
+        include:
+          - name: black
+            cmd: 'black --check --diff ./'
+          - name: isort
+            cmd: 'isort --check --diff ./'
+          - name: pylint
+            cmd: 'pylint ha_app/'
+          - name: mypy
+            cmd: 'mypy ./'
+    name: 'python-sa (${{ matrix.name }})'
+    steps:
+      - uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@master
+        with:
+          python-version: '3.11'
+
+      - name: Install python packages
+        run: |
+          pip install -U pip wheel
+          pip install -r requirements-dev.txt
+
+      - name: Run ${{ matrix.name }}
+        run: '${{ matrix.cmd }}'
