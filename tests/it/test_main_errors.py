@@ -116,7 +116,10 @@ def test_go_active_action_fail(
         "Hit exception when performing aws_activate_vip action on "
         "<xr_interface=HundredGigE0/0/0/1,vrid=1>"
     ) in ctr_logs
-    assert "ConnectTimeoutError: Connect timeout on endpoint URL" in ctr_logs
+    assert (
+        "ConnectTimeoutError: Connect timeout on endpoint URL" in ctr_logs
+        or "EndpointConnectionError: Could not connect to the endpoint URL" in ctr_logs
+    )
 
 
 def test_consistency_check_action_fail(
