@@ -1,0 +1,50 @@
+name: chart-tests
+
+on:
+  pull_request:
+    branches:
+      - "main"
+    paths:
+      - "chart/**"
+  push:
+    branches:
+      - "main"
+      - "gh-actions"
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: "chart/tests"
+          load: true
+          tags: chart-tests:latest
+
+      - name: "Start container"
+        id: start
+        run: |
+          docker run --rm -i --detach \
+              -v "$PWD/chart:/chart" \
+              -v "/var/run/docker.sock:/var/run/docker.sock" \
+              --net host \
+              --name chart-tests chart-tests:latest
+
+      - name: "Run unit tests"
+        run: |
+          docker exec chart-tests bats /chart/tests/ut
+
+      - name: "Run integration tests"
+        run: |
+          docker exec chart-tests kind create cluster --config /chart/tests/it/kind.yaml
+          docker exec chart-tests kind export kubeconfig --name integration-tests
+          docker exec chart-tests bats /chart/tests/it
+
+      - name: "Stop container"
+        if: "${{ steps.start.conclusion == 'success' }}"
+        run: |
+          docker stop chart-tests
