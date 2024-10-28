@@ -5,7 +5,7 @@ version: "0.1.0"
 appVersion: "0.1.0"
 dependencies:
 - name: xrd-vrouter
-  version: "~1.0.2-0"
+  version: "~1.0.6-0"
   repository: "https://ios-xr.github.io/xrd-helm"
   alias: xrd
   condition: xrd.enabled
